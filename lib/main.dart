@@ -45,9 +45,10 @@ class NFCDetector extends StatefulWidget {
 class _NFCDetectorState extends State<NFCDetector> {
   late CameraController _cameraController;
   late loc.Location _location;
-  String _emailAddress = 'example@example.com';
+  final String _emailAddress = 'example@example.com';
   String _nfcStatus = 'Trying to connect with NFC...';
   String _nfcErrorMessage = '';
+  bool isPolling = false;
 
   @override
   void initState() {
@@ -66,6 +67,7 @@ class _NFCDetectorState extends State<NFCDetector> {
   }
 
   Future<void> _initializeNFC() async {
+    print('Initializing NFC...');
     // Configure the background execution (Android only)
     if (Platform.isAndroid) {
       final androidConfig = FlutterBackgroundAndroidConfig(
@@ -89,17 +91,21 @@ class _NFCDetectorState extends State<NFCDetector> {
       _startNFCDetection();
     } else {
       _nfcStatus = 'NFC not available';
-      _startNFCDetection();
     }
   }
 
   Future<void> _startNFCDetection() async {
+    print("Initializing NFC connection"); //Understanding code' execution flow
+
     setState(() {
       _nfcStatus = 'Trying to connect with NFC...';
+      isPolling = true;
     });
 
     // Request permission for background location (required for Android)
     if (Platform.isAndroid) {
+      print(
+          'Enabling background execution and requesting location permission on Android');
       await FlutterBackground.enableBackgroundExecution();
       await _location.requestPermission();
     }
@@ -108,43 +114,65 @@ class _NFCDetectorState extends State<NFCDetector> {
 
     try {
       while (true) {
-        NFCTag nfcTag = await FlutterNfcKit.poll();
+        try {
+          print('Polling NFC Tag...');
+          NFCTag nfcTag = await FlutterNfcKit.poll();
+          print('Finished Polling, tag type: ${nfcTag.type}');
 
-        // Check if the tag supports any of the desired types
-        if (nfcTag.type != NFCTagType.unknown) {
-          setState(() {
-            _nfcStatus = 'Connecting to NFC Chip...';
-          });
+          //pause the execution of the while(true) loop for 1 second in each iteration
+          await Future.delayed(const Duration(seconds: 2));
 
-          if (nfcTag.id.isNotEmpty) {
-            tagConnected = true;
+          // Check if the tag supports any of the desired types
+          if (nfcTag.type != NFCTagType.unknown) {
+            print('NFC Tag type is not unknown, trying to connect...');
             setState(() {
-              _nfcStatus = 'Connection Successful';
+              _nfcStatus = 'Connecting to NFC Chip...';
             });
+
+            if (nfcTag.id.isNotEmpty) {
+              print('NFC Tag ID is not empty, connection successful');
+              tagConnected = true;
+              setState(() {
+                _nfcStatus = 'Connection Successful';
+              });
+            } else {
+              print('NFC Tag ID is empty, not supported NFC chip');
+              setState(() {
+                _nfcStatus = 'Not supported NFC chip';
+              });
+            }
           } else {
+            print('NFC Tag type is unknown, not supported NFC chip');
             setState(() {
               _nfcStatus = 'Not supported NFC chip';
             });
           }
-        } else {
-          setState(() {
-            _nfcStatus = 'Not supported NFC chip';
-          });
-        }
 
-        // If the tag was connected but is now disconnected
-        if (tagConnected && nfcTag.type == NFCTagType.unknown) {
-          tagConnected = false;
-          await _sendEmailWithLocationAndPictures();
+          // If the tag was connected but is now disconnected
+          if (tagConnected && nfcTag.type == NFCTagType.unknown) {
+            print('NFC Tag was connected but is now disconnected');
+            tagConnected = false;
+            await _sendEmailWithLocationAndPictures();
+          }
+        } on TimeoutException {
+          print('TimeoutException caught while polling NFC tag');
+          setState(() {
+            _nfcStatus = 'Polling for NFC tag timed out';
+            isPolling = false; // Add this line
+          });
         }
       }
     } on PlatformException catch (e) {
+      print('PlatformException caught: ${e.message}');
       setState(() {
         _nfcErrorMessage = "Platform exception: ${e.message}";
+        isPolling = false;
       });
     } catch (e) {
+      print('Unknown exception caught: $e');
       setState(() {
         _nfcErrorMessage = "Unknown exception: $e";
+        isPolling = false;
       });
     }
   }
