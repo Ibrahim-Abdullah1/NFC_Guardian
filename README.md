@@ -1,5 +1,4 @@
-NFC Chip Detector User Manual
-Introduction
+NFC Chip Detector
 The NFC Chip Detector is a mobile application designed to monitor the connection to an NFC chip. When the phone is disconnected from the NFC chip, the app sends an email containing the device's location and pictures taken from both cameras.
 
 Requirements
