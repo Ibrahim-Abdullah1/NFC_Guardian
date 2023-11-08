@@ -4,9 +4,13 @@ The NFC Chip Detector is a mobile application designed to monitor the connection
 *Requirements*
 
 A device with Android operating system
+
 NFC functionality on the device
+
 Camera(s) on the device
+
 Location services enabled
+
 Internet connection
 
 *Installation*
