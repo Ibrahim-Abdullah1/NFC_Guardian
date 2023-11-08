@@ -16,7 +16,7 @@ The NFC Chip Detector is a mobile application designed to monitor the connection
 
 *Installation*
 
-Install the NFC Chip Detector application from APK
+Install the NFC Chip Detector application from APK.
 Ensure that your device has NFC functionality and that it is enabled.
 Grant the necessary permissions for location, camera, and NFC access when prompted.
 
