@@ -37,4 +37,3 @@ If the app does not capture images or fetch location information, check if the n
 
 The app runs in the background and keeps monitoring the NFC chip connection even when the device is locked. However, this may increase battery consumption.
 The email sent by the app contains an email subject indicating the date and time the NFC chip was disconnected, location coordinates (latitude and longitude), and the pictures taken by both cameras.
-The app does not store the captured images or location information on the device after sending the email.
